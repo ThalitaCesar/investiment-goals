@@ -174,6 +174,3 @@ http://localhost:3333/docs
 ## Licença
 
 MIT License
-
-Quer que eu faça isso?
-```
