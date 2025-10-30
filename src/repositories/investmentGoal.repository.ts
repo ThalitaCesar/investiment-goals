@@ -1,6 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 
-
 export class InvestmentGoalRepository {
   constructor(private prisma: PrismaClient) {}
 
@@ -8,20 +7,14 @@ export class InvestmentGoalRepository {
     return this.prisma.investmentGoal.create({ data });
   }
 
-  async findAll(filters?: { name?: string; month?: string }) {
-    const where: Prisma.InvestmentGoalWhereInput = {};
-
-    if (filters?.name) {
-      where.name = { contains: filters.name, mode: 'insensitive' };
-    }
-
-    if (filters?.month) {
-      where.months = { has: filters.month.toLowerCase() };
-    }
+async findAll(filters?: { name?: string; month?: string }) {
+    const where = {
+      ...(filters?.name && { name: { contains: filters.name, mode: 'insensitive' } }),
+      ...(filters?.month && { months: { has: filters.month.toLowerCase() } })
+    };
 
     return this.prisma.investmentGoal.findMany({ where });
   }
-
   async findById(id: string) {
     return this.prisma.investmentGoal.findUnique({ where: { id } });
   }

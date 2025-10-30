@@ -14,3 +14,4 @@ model InvestmentGoal {
   value     Float
   createdAt DateTime @default(now())
 }
+

@@ -1,9 +1,16 @@
 import { InvestmentGoalRepository } from '../repositories/investmentGoal.repository';
 
+export interface InvestmentGoal {
+  id: string;
+  name: string;
+  months: string[];
+  value: number;
+}
+
 export class InvestmentGoalService {
   constructor(private repo: InvestmentGoalRepository) {}
 
-  computeAllocation(total: number, monthsCount: number) {
+  computeAllocation(total: number, monthsCount: number): number[] {
     const base = Math.floor((total / monthsCount) * 100) / 100;
     const allocations = Array(monthsCount).fill(base);
     const remainder = Math.round((total - base * monthsCount) * 100) / 100;
@@ -14,27 +21,30 @@ export class InvestmentGoalService {
     return allocations;
   }
 
-  async create(payload: { name: string; months: string[]; value: number }) {
+  async create(payload: { name: string; months: string[]; value: number }): Promise<InvestmentGoal & { allocations: number[] }> {
     const allocation = this.computeAllocation(payload.value, payload.months.length);
     const created = await this.repo.create(payload);
     return { ...created, allocations: allocation };
   }
 
-  async list(filters?: { name?: string; month?: string }) {
-    const goals = await this.repo.findAll(filters);
-    return goals.map(goal => ({
+  async list(filters?: { name?: string; month?: string }): Promise<(InvestmentGoal & { allocations: number[] })[]> {
+    const goals: InvestmentGoal[] = await this.repo.findAll(filters);
+    return goals.map((goal: InvestmentGoal) => ({
       ...goal,
       allocations: this.computeAllocation(goal.value, goal.months.length)
     }));
   }
 
-  async getById(id: string) {
+  async getById(id: string): Promise<(InvestmentGoal & { allocations: number[] }) | null> {
     const goal = await this.repo.findById(id);
     if (!goal) return null;
     return { ...goal, allocations: this.computeAllocation(goal.value, goal.months.length) };
   }
 
-  async update(id: string, payload: Partial<{ name: string; months: string[]; value: number }>) {
+  async update(
+    id: string,
+    payload: Partial<{ name: string; months: string[]; value: number }>
+  ): Promise<InvestmentGoal & { allocations: number[] }> {
     const current = await this.repo.findById(id);
     if (!current) throw new Error('Investment goal not found');
 
@@ -46,7 +56,7 @@ export class InvestmentGoalService {
     return { ...updated, allocations: allocation };
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<void> {
     await this.repo.delete(id);
   }
 }
